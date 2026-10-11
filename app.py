@@ -504,13 +504,13 @@ elif page == "Clasificación de ruido":
             noise_view["rmse_en_sigmas"].isna(),
             noise_view["rmse_en_sigmas"] > threshold,
         ],
-        ["No evaluable", "Residuo elevado"],
-        default="Compatible con la escala de ruido",
+        ["No evaluable", "Sobre el umbral"],
+        default="Dentro del umbral",
     )
     counts = noise_view["estado_residuo"].value_counts()
     metrics = st.columns(3)
-    metrics[0].metric("Residuo elevado", int(counts.get("Residuo elevado", 0)))
-    metrics[1].metric("Compatible con σ", int(counts.get("Compatible con la escala de ruido", 0)))
+    metrics[0].metric("Sobre el umbral", int(counts.get("Sobre el umbral", 0)))
+    metrics[1].metric("Dentro del umbral", int(counts.get("Dentro del umbral", 0)))
     metrics[2].metric("No evaluable", int(counts.get("No evaluable", 0)))
 
     plotted = noise_view.dropna(subset=["rmse_en_sigmas"]).copy()
@@ -520,21 +520,22 @@ elif page == "Clasificación de ruido":
             x="rmse_en_sigmas",
             y="grupo_rasgo",
             color="estado_residuo",
-            symbol="especie",
             hover_name="especie",
             hover_data={
+                "grupo_rasgo": True,
                 "ventana": True,
+                "posicion": True,
                 "rmse_residuos_Jy_beam": ":.4f",
                 "sigma_ruido_aprox_Jy_beam": ":.4f",
                 "rmse_en_sigmas": ":.2f",
                 "estado_residuo": True,
             },
             color_discrete_map={
-                "Residuo elevado": "#ffbd69",
-                "Compatible con la escala de ruido": "#60d7c5",
+                "Sobre el umbral": "#ffbd69",
+                "Dentro del umbral": "#60d7c5",
                 "No evaluable": "#8a9aa8",
             },
-            title="Error del ajuste relativo al ruido estimado",
+            title="Residuos del ajuste frente al umbral operativo",
         )
         fig_noise.add_vline(
             x=threshold,
@@ -546,8 +547,10 @@ elif page == "Clasificación de ruido":
         fig_noise.update_layout(
             xaxis_title="RMSE residual / σ local (adimensional)",
             yaxis_title="Grupo de rasgo espectral",
+            showlegend=False,
         )
         st.plotly_chart(plot_layout(fig_noise, max(420, 52 * len(plotted))), width="stretch")
+        st.caption("Turquesa: RMSE dentro del umbral; ámbar: lo supera. Pasa el cursor para ver especie, ventana, extracción y medidas. El marcador no estima la probabilidad de identidad molecular.")
     else:
         st.warning("No se pudo calcular el RMSE para los perfiles disponibles.")
 
