@@ -8,8 +8,14 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
+from scipy.optimize import curve_fit
 
-from line_statistics import assess_molecular_evidence, catalog_associations, detect_features
+from line_statistics import (
+    assess_molecular_evidence,
+    catalog_associations,
+    detect_features,
+    sigma_differences,
+)
 
 ROOT = Path(__file__).resolve().parent
 SPECTRA_DIR = ROOT / "espectros" if (ROOT / "espectros").exists() else ROOT
@@ -86,6 +92,62 @@ def load_evidence() -> pd.DataFrame:
 
 
 @st.cache_data(show_spinner=False)
+def enrich_evidence_with_residual_rmse(frame: pd.DataFrame) -> pd.DataFrame:
+    """Estimate local fit residual RMSE and scale it by robust channel noise.
+
+    This is a fit-diagnostic metric. It is not a formal noise classifier,
+    goodness-of-fit probability, or molecular detection statistic.
+    """
+    result = frame.copy()
+    rmse_values: list[float] = []
+    noise_values: list[float] = []
+
+    def gaussian_with_baseline(x, amplitude, center, width, baseline):
+        return baseline + amplitude * np.exp(-0.5 * ((x - center) / width) ** 2)
+
+    for _, row in result.iterrows():
+        try:
+            window = int(str(row["ventana"]).upper().replace("W", ""))
+            position = str(row.get("posicion", "B_offset"))
+            intensity_column = POSITIONS.get(position, POSITIONS["B_offset"])[0]
+            rest_frequency = float(row["frecuencia_reposo_MHz"])
+            spectrum = load_spectrum(window)
+            frequency = spectrum["frecuencia_LSRK_GHz"].to_numpy(dtype=float) * 1000
+            intensity = spectrum[intensity_column].to_numpy(dtype=float)
+            velocity = C_KMS * (1 - frequency / rest_frequency)
+            selected = np.isfinite(velocity) & np.isfinite(intensity) & (velocity >= 0) & (velocity <= 5)
+            x, observed = velocity[selected], intensity[selected]
+            sigma = sigma_differences(intensity)
+            if len(x) < 9 or not np.isfinite(sigma) or sigma <= 0:
+                rmse_values.append(np.nan)
+                noise_values.append(sigma)
+                continue
+
+            baseline = float(np.median(observed))
+            amplitude = max(float(np.max(observed) - baseline), np.finfo(float).eps)
+            initial_center = float(x[int(np.argmax(observed))])
+            parameters, _ = curve_fit(
+                gaussian_with_baseline,
+                x,
+                observed,
+                p0=[amplitude, initial_center, 0.5, baseline],
+                bounds=([0, 0, 0.1, -np.inf], [np.inf, 5, 3, np.inf]),
+                maxfev=20_000,
+            )
+            residuals = observed - gaussian_with_baseline(x, *parameters)
+            rmse_values.append(float(np.sqrt(np.mean(residuals**2))))
+            noise_values.append(float(sigma))
+        except (KeyError, TypeError, ValueError, RuntimeError, OverflowError):
+            rmse_values.append(np.nan)
+            noise_values.append(np.nan)
+
+    result["rmse_residuos_Jy_beam"] = rmse_values
+    result["sigma_ruido_aprox_Jy_beam"] = noise_values
+    result["rmse_en_sigmas"] = result["rmse_residuos_Jy_beam"] / result["sigma_ruido_aprox_Jy_beam"]
+    return result
+
+
+@st.cache_data(show_spinner=False)
 def load_line_catalog() -> pd.DataFrame:
     if not LINE_CATALOG_PATH.exists():
         return pd.DataFrame()
@@ -157,7 +219,7 @@ windows_n = evidence["ventana"].nunique() if "ventana" in evidence else 0
 with st.sidebar:
     st.markdown("## Skyntists")
     st.caption("Cuaderno de campo digital · IRAS 16293−2422")
-    page = st.radio("Explorar", ["Inicio", "Espectros", "Evidencia molecular", "Demostración Doppler", "Método paso a paso", "Glosario y fuentes"], label_visibility="collapsed", key="wiki_page")
+    page = st.radio("Explorar", ["Inicio", "Espectros", "Evidencia molecular", "Demostración Doppler", "Clasificación de ruido", "Método paso a paso", "Glosario y fuentes"], label_visibility="collapsed", key="wiki_page")
     st.divider()
     st.markdown("**Pregunta guía**")
     st.caption("¿Qué especies moleculares son compatibles con los rasgos espectrales observados?")
@@ -202,7 +264,7 @@ if page == "Inicio":
         st.write("El SNR informado es el contraste local aproximado del perfil respecto al ruido estimado. Un SNR alto señala una estructura destacada en ese intervalo; no mide la probabilidad de que sea una especie concreta.")
         st.info("Identificación robusta requiere varias transiciones independientes, consistencia entre líneas, tratamiento de blends y comparación con alternativas. La app conserva esta distinción en cada visualización.")
     st.markdown("### Ruta de lectura")
-    st.write("1. Empieza en **Espectros** y selecciona un rasgo; 2. revisa la comparación de frecuencias en **Evidencia molecular**; 3. sigue las ecuaciones y supuestos en **Método paso a paso**; 4. consulta términos y referencias en **Glosario y fuentes**.")
+    st.write("1. Empieza en **Espectros** y selecciona un rasgo; 2. revisa la comparación de frecuencias en **Evidencia molecular**; 3. inspecciona los ajustes en **Clasificación de ruido**; 4. sigue las ecuaciones y supuestos en **Método paso a paso**; 5. consulta términos y referencias en **Glosario y fuentes**.")
 
 
 elif page == "Espectros":
@@ -422,6 +484,94 @@ elif page == "Demostración Doppler":
         )
 
 
+elif page == "Clasificación de ruido":
+    st.subheader("Clasificación del residuo de los ajustes")
+    st.write(
+        "Compara el error residual de una gaussiana con baseline frente a la escala de ruido aproximada del espectro. "
+        "El umbral sirve para priorizar inspección; no es una prueba de significancia ni una clasificación de moléculas."
+    )
+    threshold = st.slider(
+        "Umbral operativo de RMSE / σ local",
+        min_value=0.5,
+        max_value=6.0,
+        value=2.5,
+        step=0.1,
+        help="Razón adimensional entre RMSE de residuos y σ aproximada por MAD de primeras diferencias.",
+    )
+    noise_view = enrich_evidence_with_residual_rmse(evidence)
+    noise_view["estado_residuo"] = np.select(
+        [
+            noise_view["rmse_en_sigmas"].isna(),
+            noise_view["rmse_en_sigmas"] > threshold,
+        ],
+        ["No evaluable", "Residuo elevado"],
+        default="Compatible con la escala de ruido",
+    )
+    counts = noise_view["estado_residuo"].value_counts()
+    metrics = st.columns(3)
+    metrics[0].metric("Residuo elevado", int(counts.get("Residuo elevado", 0)))
+    metrics[1].metric("Compatible con σ", int(counts.get("Compatible con la escala de ruido", 0)))
+    metrics[2].metric("No evaluable", int(counts.get("No evaluable", 0)))
+
+    plotted = noise_view.dropna(subset=["rmse_en_sigmas"]).copy()
+    if not plotted.empty:
+        fig_noise = px.scatter(
+            plotted,
+            x="rmse_en_sigmas",
+            y="grupo_rasgo",
+            color="estado_residuo",
+            symbol="especie",
+            hover_name="especie",
+            hover_data={
+                "ventana": True,
+                "rmse_residuos_Jy_beam": ":.4f",
+                "sigma_ruido_aprox_Jy_beam": ":.4f",
+                "rmse_en_sigmas": ":.2f",
+                "estado_residuo": True,
+            },
+            color_discrete_map={
+                "Residuo elevado": "#ffbd69",
+                "Compatible con la escala de ruido": "#60d7c5",
+                "No evaluable": "#8a9aa8",
+            },
+            title="Error del ajuste relativo al ruido estimado",
+        )
+        fig_noise.add_vline(
+            x=threshold,
+            line_dash="dash",
+            line_color="#f2a7ff",
+            annotation_text=f"umbral = {threshold:.1f}σ",
+            annotation_position="top right",
+        )
+        fig_noise.update_layout(
+            xaxis_title="RMSE residual / σ local (adimensional)",
+            yaxis_title="Grupo de rasgo espectral",
+        )
+        st.plotly_chart(plot_layout(fig_noise, max(420, 52 * len(plotted))), width="stretch")
+    else:
+        st.warning("No se pudo calcular el RMSE para los perfiles disponibles.")
+
+    noise_columns = [
+        "especie", "grupo_rasgo", "ventana", "posicion",
+        "rmse_residuos_Jy_beam", "sigma_ruido_aprox_Jy_beam",
+        "rmse_en_sigmas", "estado_residuo",
+    ]
+    st.markdown("#### Tabla de diagnóstico")
+    st.dataframe(noise_view[noise_columns], width="stretch", hide_index=True)
+    st.download_button(
+        "Descargar diagnóstico de residuos",
+        noise_view[noise_columns].to_csv(index=False).encode("utf-8"),
+        "clasificacion_residuos.csv",
+        "text/csv",
+    )
+    st.info(
+        "El RMSE se calcula sobre una gaussiana con baseline en canales con velocidad derivada entre 0 y 5 km/s. "
+        "Se normaliza con σ robusta aproximada de la extracción para evitar un umbral fijo dependiente de Jy/beam. "
+        "Un residuo elevado puede reflejar blends, baseline imperfecto, perfil no gaussiano o ruido; no identifica por sí mismo una línea molecular. "
+        "La correlación entre canales y los grados de libertad efectivos no se modelan, por lo que el umbral no debe interpretarse como una prueba estadística formal."
+    )
+
+
 elif page == "Método paso a paso":
     st.subheader("De los datos calibrados al estado de evidencia")
     st.write("Esta sección documenta qué transforma el análisis y qué queda pendiente. Abre los pasos para ver las ecuaciones y los supuestos.")
@@ -435,6 +585,9 @@ elif page == "Método paso a paso":
         st.write("El gráfico principal centra cada candidata en una escala local en MHz. El residuo indica concordancia con la velocidad sistémica adoptada, pero no es independiente de los datos de ajuste ni una incertidumbre estadística.")
     with st.expander("4 · Ruido robusto, ajuste y SNR"):
         st.write("La sigma aproximada usa la dispersión robusta (MAD) de primeras diferencias dividida entre √2. El perfil se ajusta localmente con componente gaussiana y baseline. El SNR es contraste local aproximado. Correlación entre canales, baseline imperfecto, blends y selección de ventanas pueden alterar su valor; no debe interpretarse como significancia global.")
+    with st.expander("4b · Diagnóstico del residuo del ajuste"):
+        st.latex(r"\mathrm{RMSE}=\sqrt{\frac{1}{N}\sum_i (I_i-\hat I_i)^2},\qquad R_{\rm resid}=\frac{\mathrm{RMSE}}{\sigma_{\rm aprox}}")
+        st.write("La página **Clasificación de ruido** compara el RMSE de un ajuste gaussiano con baseline en 0–5 km/s contra la sigma aproximada por MAD de primeras diferencias de la extracción. El deslizador solo cambia una etiqueta operativa para ayudar a inspeccionar perfiles. RMSE/σ no es una probabilidad ni una prueba formal de bondad de ajuste: no se modelan covarianza entre canales, grados de libertad efectivos ni la incertidumbre del modelo.")
     with st.expander("5 · Área integrada y agrupación"):
         st.write("El área se aproxima integrando el perfil sobre el ancho seleccionado; su error aproximado no incluye correlación, calibración ni incertidumbre de modelo. Varias transiciones pueden asociarse al mismo grupo de rasgo: 107 asociaciones del catálogo se agruparon en 64 rasgos, por lo que asociación no significa detección independiente.")
     with st.expander("6 · Qué exige una identificación más fuerte"):
@@ -478,4 +631,3 @@ else:
 
 st.divider()
 st.caption("Skyntists · AstroHack SATEM 2026 · Análisis exploratorio. La compatibilidad espectral descrita aquí es tentativa y depende de los datos, catálogos y supuestos documentados.")
-
