@@ -7,10 +7,8 @@ import pandas as pd
 import streamlit as st
 
 ROOT = Path(__file__).resolve().parent
-SPECTRA_DIR = ROOT / "espectros" if (ROOT / "espectros").exists() else ROOT
+SPECTRA_DIR = ROOT / "espectros"
 EVIDENCE_PATH = ROOT / "Entregables" / "Campos_de_evidencia.csv"
-if not EVIDENCE_PATH.exists():
-    EVIDENCE_PATH = ROOT / "Campos_de_evidencia.csv"
 
 st.set_page_config(
     page_title="Skyntists · AstroHack",
@@ -99,11 +97,14 @@ with tabs[1]:
                 x="frecuencia_reposo_MHz",
                 y="frecuencia_pico_LSRK_MHz",
                 color="especie" if "especie" in view else None,
+                size=50,
+                x_label="Frecuencia de catálogo (MHz)",
+                y_label="Frecuencia de pico LSRK (MHz)"
             )
         cols = [c for c in ["especie","catalogo","entrada","frecuencia_reposo_MHz","ventana","frecuencia_pico_LSRK_MHz","v_radio_kms","FWHM_kms","SNR","mezcla","decision"] if c in view.columns]
         st.dataframe(view[cols], use_container_width=True, hide_index=True)
         st.download_button("Descargar CSV de evidencia", view.to_csv(index=False).encode("utf-8"), "Campos_de_evidencia_filtrado.csv", "text/csv")
-
+        
 with tabs[2]:
     st.subheader("Cómo leer los resultados")
     st.markdown("""
@@ -122,7 +123,7 @@ with tabs[3]:
 - Datos ALMA: `ADS/JAO.ALMA#2013.1.00278.S`, productos procesados ARI-L.
 - Jørgensen et al. (2016), PILS, *A&A*, 595, A117. [arXiv:1607.08733](https://arxiv.org/abs/1607.08733).
 - [Catálogo CDMS](https://cdms.astro.uni-koeln.de/classic/entries/) · [Catálogo JPL](https://spec.jpl.nasa.gov/).
-- Identificadores, hashes y procedencia local: `procedencia_catalogos.json`.
+- Identificadores, hashes y procedencia local: `catalogos/procedencia_catalogos.json`.
 
 El catálogo de apoyo es parcial y no constituye un inventario exhaustivo de contaminantes espectrales. La app visualiza los archivos entregados; la ejecución reproducible y los ajustes detallados siguen en `herramientas/Inicio_AstroHack.ipynb`.
 """)
