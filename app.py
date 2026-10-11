@@ -148,7 +148,7 @@ if page == "Inicio":
         fig = px.bar(species_summary, x="especie", y="perfiles", color="especie", text="perfiles", title="Perfiles evaluados por especie", color_discrete_sequence=["#55d6c2", "#6da8ff", "#ffc66d"])
         fig.update_traces(textposition="outside", marker_line_width=0)
         fig.update_layout(showlegend=False, xaxis_title=None, yaxis_title="Número de perfiles")
-        st.plotly_chart(plot_layout(fig, 365), use_container_width=True)
+        st.plotly_chart(plot_layout(fig, 365), width="stretch")
     with b:
         st.markdown("#### Cómo interpretar el SNR")
         st.write("El SNR informado es el contraste local aproximado del perfil respecto al ruido estimado. Un SNR alto señala una estructura destacada en ese intervalo; no mide la probabilidad de que sea una especie concreta.")
@@ -196,7 +196,7 @@ elif page == "Espectros":
             fig.update_xaxes(range=[fit_ghz-half_span, fit_ghz+half_span])
         st.caption(f"Selección: {candidate['especie']} · {candidate['grupo_rasgo']}. Línea amarilla: centro del ajuste; línea magenta: frecuencia de catálogo llevada a LSRK con v = {V_SYSTEM_KMS:.1f} km/s. La segunda es una referencia cinemática, no una medida independiente.")
     fig.update_layout(title=f"W{window} · {POSITIONS[position][1] if not compare else 'comparación de posiciones'}", xaxis_title="Frecuencia observada LSRK (GHz)", yaxis_title="Intensidad (Jy/beam)", hovermode="x unified")
-    st.plotly_chart(plot_layout(fig, 540), use_container_width=True)
+    st.plotly_chart(plot_layout(fig, 540), width="stretch")
     st.markdown("#### ¿Qué representa cada extracción?")
     st.write("Las posiciones corresponden a espectros extraídos del producto procesado. B_offset es la posición desplazada recomendada para evaluar emisión menos contaminada por el continuo brillante. B_pico y A sirven como comparación espacial. Los haces difieren entre ventanas; no interpretes diferencias de amplitud entre W1/W2 como cambios de abundancia.")
     st.download_button("Descargar espectro de la ventana", df.to_csv(index=False).encode("utf-8"), f"W{window}_espectros.csv", "text/csv")
@@ -211,7 +211,7 @@ elif page == "Evidencia molecular":
     chosen_windows = st.multiselect("Ventanas incluidas", windows, default=windows)
     view = evidence[evidence["especie"].isin(chosen) & evidence["ventana"].isin(chosen_windows)].copy()
     if not view.empty:
-        fig = px.strip(view, x="especie", y="residuo_MHz_vs_vsys", color="especie", symbol="ventana", hover_name="grupo_rasgo", hover_data={"frecuencia_reposo_MHz": ":.4f", "frecuencia_pico_LSRK_MHz": ":.4f", "v_frecuencia_kms": ":.3f", "ventana": True, "residuo_MHz_vs_vsys": ":+.4f"}, stripmode="overlay", title="Desplazamiento del centro ajustado frente a la predicción cinemática")
+        fig = px.strip(view, x="especie", y="residuo_MHz_vs_vsys", color="especie", hover_name="grupo_rasgo", hover_data={"frecuencia_reposo_MHz": ":.4f", "frecuencia_pico_LSRK_MHz": ":.4f", "v_frecuencia_kms": ":.3f", "ventana": True, "residuo_MHz_vs_vsys": ":+.4f"}, stripmode="overlay", title="Desplazamiento del centro ajustado frente a la predicción cinemática")
         fig.add_hline(y=0, line_dash="dash", line_color="#f4f7fa", opacity=.85, annotation_text="Coincidencia con v = 2.7 km/s", annotation_position="top left")
         fig.update_traces(jitter=0.22, pointpos=0, marker=dict(size=13, line=dict(width=1, color="#071522")))
         fig.update_layout(xaxis_title="Especie candidata", yaxis_title="ν ajuste − ν catálogo corregida (MHz)", showlegend=False)
@@ -219,10 +219,14 @@ elif page == "Evidencia molecular":
         st.caption("Residuo positivo: el centro ajustado queda a mayor frecuencia que la predicción. El residuo y v_frecuencia se derivan de estas dos frecuencias; no son mediciones independientes ni incertidumbres. No se dibujan barras de error porque la tabla no contiene incertidumbres del centro del ajuste.")
         chart, explanation = st.columns([1.4, 1])
         with chart:
-            figv = px.scatter(view, x="v_frecuencia_kms", y="SNR", color="especie", symbol="ventana", size="FWHM_kms", hover_name="grupo_rasgo", hover_data={"frecuencia_reposo_MHz": ":.3f", "frecuencia_pico_LSRK_MHz": ":.3f", "FWHM_kms": ":.2f", "mezcla": True}, title="Contraste local y cinemática de los perfiles")
-            figv.add_vline(x=V_SYSTEM_KMS, line_dash="dash", line_color="#f5d26c", annotation_text="v sistémica adoptada")
-            figv.update_layout(xaxis_title="Velocidad radial derivada (km/s)", yaxis_title="SNR local aproximado")
-            st.plotly_chart(plot_layout(figv, 430), width="stretch")
+            plotted = view.dropna(subset=["v_frecuencia_kms", "SNR", "FWHM_kms"])
+            if not plotted.empty:
+                figv = px.scatter(plotted, x="v_frecuencia_kms", y="SNR", color="especie", symbol="ventana", size="FWHM_kms", hover_name="grupo_rasgo", hover_data={"frecuencia_reposo_MHz": ":.3f", "frecuencia_pico_LSRK_MHz": ":.3f", "FWHM_kms": ":.2f", "mezcla": True}, title="Contraste local y cinemática de los perfiles")
+                figv.add_vline(x=V_SYSTEM_KMS, line_dash="dash", line_color="#f5d26c", annotation_text="v sistémica adoptada")
+                figv.update_layout(xaxis_title="Velocidad radial derivada (km/s)", yaxis_title="SNR local aproximado")
+                st.plotly_chart(plot_layout(figv, 430), width="stretch")
+                if len(plotted) < len(view):
+                    st.caption("Se excluyen de esta gráfica los perfiles sin SNR o FWHM medidos; esas filas permanecen en el residuo y la tabla.")
         with explanation:
             st.markdown("#### Lectura de la evidencia")
             st.write("En la gráfica de SNR, el tamaño del símbolo representa el FWHM ajustado. Un perfil estrecho y de alto contraste puede ser una buena línea candidata, pero congestión y coincidencias de otras especies reducen la especificidad.")
