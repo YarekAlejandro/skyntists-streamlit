@@ -10,10 +10,13 @@ Wiki interactiva y explorador científico para inspeccionar los espectros de IRA
 - **Espectros:** W1/W2 con selector de extracción, zoom alrededor de un centro ajustado, modo de banda completa y referencia de catálogo corregida a LSRK.
 - **Evidencia molecular:** filtros por especie/ventana, residuo de frecuencia contra la velocidad sistémica adoptada, exploración de SNR/ancho y tabla descargable.
 - **Demostración Doppler:** ajusta el umbral de detección, velocidad sistémica, margen cinemático y extracción; compara picos observados con transiciones desplazadas del catálogo.
+- **Clasificación de ruido:** compara el RMSE de los ajustes gaussianos con una estimación robusta de ruido local; permite cambiar un umbral operativo y descargar el diagnóstico por perfil.
 - **Método paso a paso:** sistema de referencia, corrección Doppler, residuo, estimación de ruido, ajustes, agrupación, límites y contexto de los coeficientes de Einstein.
 - **Glosario y fuentes:** términos, procedencia de datos, catálogos y referencias.
 
 Los tooltips conservan las frecuencias originales. En la demostración, el p/q es condicional a los deslizadores seleccionados y no corrige por explorar varias velocidades; las gráficas sirven para sensibilidad visual, no para optimizar parámetros y reclamar significancia. No se ocultan resultados tentativos ni se inventan incertidumbres ausentes en los archivos.
+
+La página **Clasificación de ruido** evalúa el residuo de un ajuste gaussiano con baseline en un intervalo de velocidad definido y lo expresa en unidades de la escala de ruido aproximada (`RMSE/σ`). La categoría y su umbral son diagnósticos exploratorios para priorizar inspección: un residuo alto también puede deberse a blends, baseline imperfecto o perfiles no gaussianos. No es una prueba formal de bondad de ajuste, una probabilidad ni una identificación molecular.
 
 ## Ejecutar localmente
 
@@ -52,4 +55,3 @@ El catálogo local no proporciona coeficientes Einstein Aᵤₗ para estas filas
 
 
 Datos ALMA del proyecto `ADS/JAO.ALMA#2013.1.00278.S`, productos procesados ARI-L. Contexto: Jørgensen et al. (2016), PILS, *A&A*, 595, A117 ([arXiv:1607.08733](https://arxiv.org/abs/1607.08733)); [CDMS](https://cdms.astro.uni-koeln.de/classic/entries/) y [JPL](https://spec.jpl.nasa.gov/).
-
