@@ -513,7 +513,44 @@ elif page == "Clasificación de ruido":
     metrics[1].metric("Dentro del umbral", int(counts.get("Dentro del umbral", 0)))
     metrics[2].metric("No evaluable", int(counts.get("No evaluable", 0)))
 
+    status_colors = {
+        "Sobre el umbral": "#ffbd69",
+        "Dentro del umbral": "#60d7c5",
+        "No evaluable": "#8a9aa8",
+    }
+    distribution = counts.rename_axis("estado_residuo").reset_index(name="perfiles")
+    distribution = distribution.loc[distribution["perfiles"] > 0]
+    fig_donut = px.pie(
+        distribution,
+        names="estado_residuo",
+        values="perfiles",
+        hole=0.66,
+        color="estado_residuo",
+        color_discrete_map=status_colors,
+    )
+    fig_donut.update_traces(
+        textinfo="value+percent",
+        textposition="inside",
+        marker=dict(line=dict(color="#071522", width=3)),
+        hovertemplate="%{label}: %{value} perfiles (%{percent})<extra></extra>",
+    )
+    fig_donut.update_layout(
+        showlegend=False,
+        title="Distribución de perfiles",
+        annotations=[dict(
+            text=f"<b>{len(noise_view)}</b><br>perfiles",
+            x=0.5, y=0.5, showarrow=False,
+            font=dict(size=17, color="#d7e4ea"),
+        )],
+    )
+
     plotted = noise_view.dropna(subset=["rmse_en_sigmas"]).copy()
+    chart_col, scatter_col = st.columns([0.9, 2.1], gap="large")
+    with chart_col:
+        st.markdown("#### Resumen al umbral seleccionado")
+        st.plotly_chart(plot_layout(fig_donut, 350), width="stretch")
+        st.caption("Turquesa: dentro del umbral · ámbar: sobre el umbral · gris: no evaluable.")
+
     if not plotted.empty:
         fig_noise = px.scatter(
             plotted,
@@ -530,11 +567,7 @@ elif page == "Clasificación de ruido":
                 "rmse_en_sigmas": ":.2f",
                 "estado_residuo": True,
             },
-            color_discrete_map={
-                "Sobre el umbral": "#ffbd69",
-                "Dentro del umbral": "#60d7c5",
-                "No evaluable": "#8a9aa8",
-            },
+            color_discrete_map=status_colors,
             title="Residuos del ajuste frente al umbral operativo",
         )
         fig_noise.add_vline(
@@ -549,10 +582,13 @@ elif page == "Clasificación de ruido":
             yaxis_title="Grupo de rasgo espectral",
             showlegend=False,
         )
-        st.plotly_chart(plot_layout(fig_noise, max(420, 52 * len(plotted))), width="stretch")
-        st.caption("Turquesa: RMSE dentro del umbral; ámbar: lo supera. Pasa el cursor para ver especie, ventana, extracción y medidas. El marcador no estima la probabilidad de identidad molecular.")
+        with scatter_col:
+            st.markdown("#### Diagnóstico por rasgo")
+            st.plotly_chart(plot_layout(fig_noise, max(420, 52 * len(plotted))), width="stretch")
+            st.caption("Pasa el cursor para ver especie, ventana, extracción y medidas. El marcador no estima la probabilidad de identidad molecular.")
     else:
-        st.warning("No se pudo calcular el RMSE para los perfiles disponibles.")
+        with scatter_col:
+            st.warning("No se pudo calcular el RMSE para los perfiles disponibles.")
 
     noise_columns = [
         "especie", "grupo_rasgo", "ventana", "posicion",
