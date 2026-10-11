@@ -1,0 +1,122 @@
+[
+  {
+    "archivo": "c032504",
+    "especie": "CH3OH",
+    "fuente": "CDMS",
+    "url": "https://cdms.astro.uni-koeln.de/classic/entries/c032504.cat",
+    "sha256_original": "ece88d631b0d5bc6bcd8ff27efdcc632b6489d8d732cd01fde7c7f522e4d72e9",
+    "fecha": "2026-10-09"
+  },
+  {
+    "archivo": "c041505",
+    "especie": "CH3CN",
+    "fuente": "CDMS",
+    "url": "https://cdms.astro.uni-koeln.de/classic/entries/c041505.cat",
+    "sha256_original": "7556b20744b199e8e5f2330ecdcd5cbc9f71389302068b3ed4f5a5e800cbc7c8",
+    "fecha": "2026-10-09"
+  },
+  {
+    "archivo": "c043511",
+    "especie": "HNCO",
+    "fuente": "CDMS",
+    "url": "https://cdms.astro.uni-koeln.de/classic/entries/c043511.cat",
+    "sha256_original": "4fbb1e92bd0b8fef92d82fe3d0b1a2a7faa7d8b3f5e36f4c87369f0d75943199",
+    "fecha": "2026-10-09"
+  },
+  {
+    "archivo": "c045512",
+    "especie": "NH2CHO",
+    "fuente": "CDMS",
+    "url": "https://cdms.astro.uni-koeln.de/classic/entries/c045512.cat",
+    "sha256_original": "569543d21cbf3d6bdcb3e00e35ebfe1bee22dcc41b8574702ecbf1086bc586dc",
+    "fecha": "2026-10-09"
+  },
+  {
+    "archivo": "c060501",
+    "especie": "CH2(OH)CHO",
+    "fuente": "CDMS",
+    "url": "https://cdms.astro.uni-koeln.de/classic/entries/c060501.cat",
+    "sha256_original": "e702948d141b3447eae2f99d30be1b39a65f637d9c9e31e2518b8c4520a69d4e",
+    "fecha": "2026-10-09"
+  },
+  {
+    "archivo": "c075511",
+    "especie": "Glycine-I",
+    "fuente": "CDMS",
+    "url": "https://cdms.astro.uni-koeln.de/classic/entries/c075511.cat",
+    "sha256_original": "8c99c6fd4d35d75f9254df718266aa1b5f79c0b9dede57bd2c022c3e9e53d810",
+    "fecha": "2026-10-09"
+  },
+  {
+    "archivo": "c046514",
+    "especie": "CH3OCH3",
+    "fuente": "CDMS",
+    "url": "https://cdms.astro.uni-koeln.de/classic/entries/c046514.cat",
+    "sha256_original": "881a84ae582d442b6ea6f5083a3327a6f7dd19bf2249c7f680c8b132b2b51b7b",
+    "fecha": "2026-10-09"
+  },
+  {
+    "archivo": "c046524",
+    "especie": "C2H5OH",
+    "fuente": "CDMS",
+    "url": "https://cdms.astro.uni-koeln.de/classic/entries/c046524.cat",
+    "sha256_original": "05a34f734cfbc11a06f455de049d0dc58c97f94758e9320d828fe52c78a6bb49",
+    "fecha": "2026-10-09"
+  },
+  {
+    "archivo": "c055502",
+    "especie": "C2H5CN",
+    "fuente": "CDMS",
+    "url": "https://cdms.astro.uni-koeln.de/classic/entries/c055502.cat",
+    "sha256_original": "7c4840fa519e9f8cd1c24b5eaf53626dd7090f44b92984be3be5eaaffb648a95",
+    "fecha": "2026-10-09"
+  },
+  {
+    "archivo": "c064502",
+    "especie": "SO2",
+    "fuente": "CDMS",
+    "url": "https://cdms.astro.uni-koeln.de/classic/entries/c064502.cat",
+    "sha256_original": "a3e82f9d55a5012d6e39eb7cc77b9a6aa85a858e1a68d09d6199c1a268aca1f5",
+    "fecha": "2026-10-09"
+  },
+  {
+    "archivo": "c033502",
+    "especie": "13CH3OH",
+    "fuente": "CDMS",
+    "url": "https://cdms.astro.uni-koeln.de/classic/entries/c033502.cat",
+    "sha256_original": "3ab90230817e6c31902e6ed672afce4865847c2c68bfc356ae583c86778861f5",
+    "fecha": "2026-10-09"
+  },
+  {
+    "archivo": "c046509",
+    "especie": "H2CS",
+    "fuente": "CDMS",
+    "url": "https://cdms.astro.uni-koeln.de/classic/entries/c046509.cat",
+    "sha256_original": "6be4d92cee19438e198077999bbd9546429ded70911adfa1e0205675b5f50909",
+    "fecha": "2026-10-09"
+  },
+  {
+    "archivo": "j060003",
+    "especie": "CH3OCHO",
+    "fuente": "JPL",
+    "url": "https://spec.jpl.nasa.gov/ftp/pub/catalog/c060003.cat",
+    "sha256_original": "8597d111cbcc15524dc88603ea78bccfca01684b1bc4a5ab090c0f9d94e33f04",
+    "fecha": "2026-10-09"
+  },
+  {
+    "archivo": "j044003",
+    "especie": "CH3CHO",
+    "fuente": "JPL",
+    "url": "https://spec.jpl.nasa.gov/ftp/pub/catalog/c044003.cat",
+    "sha256_original": "c4ffac8dd53a5f3845908ecb15d785949fe8b60bcadd9adadcc8f383872126ee",
+    "fecha": "2026-10-09"
+  },
+  {
+    "archivo": "j033004",
+    "especie": "CH2DOH",
+    "fuente": "JPL",
+    "url": "https://spec.jpl.nasa.gov/ftp/pub/catalog/c033004.cat",
+    "sha256_original": "9fbb3d276f46cfd0a3368ec6dd52d477b3e41be39384dad2e89b4e719ec95646",
+    "fecha": "2026-10-09"
+  }
+]
