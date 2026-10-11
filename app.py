@@ -356,17 +356,18 @@ elif page == "Demostración Doppler":
         distinct_features = int(summary_row["rasgos_distintos_asociados"].iloc[0]) if not summary_row.empty else 0
         q_value = float(summary_row["q_BY_12_especies"].iloc[0]) if not summary_row.empty else np.nan
         grade = str(summary_row["grado_evidencia"].iloc[0]) if not summary_row.empty else "No evaluable"
-        metrics = st.columns(4)
         grade_short = {
             "Compatibilidad tentativa": "Tentativa",
             "Sugestiva, ambigua": "Ambigua",
             "Indicio débil; insuficiente para asignar": "Débil",
             "Sin evidencia suficiente en esta prueba": "Insuf.",
         }.get(grade, "No evaluable")
-        metrics[0].metric("Ruido σ", f"{demo_sigma:.4f}" if np.isfinite(demo_sigma) else "—", help="Estimación aproximada en Jy/beam a partir de diferencias entre canales.")
-        metrics[1].metric("Picos", f"{len(peaks)}", help=f"Máximos con prominencia ≥ {demo_threshold:g}σ local.")
-        metrics[2].metric("Líneas", f"{matched_lines}/{len(transitions)}", help="Transiciones del catálogo local asociadas en esta ventana; no es una tasa de identidad molecular.")
-        metrics[3].metric("Grado", grade_short, help=f"{grade}. Solo para la ventana elegida; no es probabilidad posterior ni la evaluación conjunta W1+W2.")
+        metrics_top = st.columns(2)
+        metrics_top[0].metric("Ruido σ", f"{demo_sigma:.4f}" if np.isfinite(demo_sigma) else "—", help="Estimación aproximada en Jy/beam a partir de diferencias entre canales.")
+        metrics_top[1].metric("Picos detectados", f"{len(peaks)}", help=f"Máximos con prominencia ≥ {demo_threshold:g}σ local.")
+        metrics_bottom = st.columns(2)
+        metrics_bottom[0].metric("Transiciones asociadas", f"{matched_lines}/{len(transitions)}", help="Transiciones del catálogo local asociadas en esta ventana; no es una tasa de identidad molecular.")
+        metrics_bottom[1].metric("Grado en la ventana", grade_short, help=f"{grade}. Solo para la ventana elegida; no es probabilidad posterior ni la evaluación conjunta W1+W2.")
         if np.isfinite(q_value):
             st.caption(f"Para {demo_species} en W{demo_window}: {distinct_features} rasgos distintos asociados · q empírico BY = {q_value:.4g} frente a desplazamientos circulares, corregido por las 12 especies del catálogo local.")
 
