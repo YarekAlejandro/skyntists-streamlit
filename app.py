@@ -219,7 +219,7 @@ windows_n = evidence["ventana"].nunique() if "ventana" in evidence else 0
 with st.sidebar:
     st.markdown("## Skyntists")
     st.caption("Cuaderno de campo digital · IRAS 16293−2422")
-    page = st.radio("Explorar", ["Inicio", "Espectros", "Evidencia molecular", "Demostración Doppler", "Clasificación de ruido", "Método paso a paso", "Glosario y fuentes"], label_visibility="collapsed", key="wiki_page")
+    page = st.radio("Explorar", ["Inicio", "Espectros", "Agrupamiento espacial", "Evidencia molecular", "Demostración Doppler", "Clasificación de ruido", "Método paso a paso", "Glosario y fuentes"], label_visibility="collapsed", key="wiki_page")
     st.divider()
     st.markdown("**Pregunta guía**")
     st.caption("¿Qué especies moleculares son compatibles con los rasgos espectrales observados?")
@@ -311,6 +311,26 @@ elif page == "Espectros":
     st.write("Las posiciones corresponden a espectros extraídos del producto procesado. B_offset es la posición desplazada recomendada para evaluar emisión menos contaminada por el continuo brillante. B_pico y A sirven como comparación espacial. Los haces difieren entre ventanas; no interpretes diferencias de amplitud entre W1/W2 como cambios de abundancia.")
     st.download_button("Descargar espectro de la ventana", df.to_csv(index=False).encode("utf-8"), f"W{window}_espectros.csv", "text/csv")
 
+
+elif page == "Agrupamiento espacial":
+    st.subheader("Agrupamiento de regiones por similitud espectral")
+    st.markdown("El agrupamiento no supervisado organiza espectros con rasgos parecidos; la reducción de dimensionalidad mediante componentes principales permite resumir variaciones entre canales y visualizar patrones. En conjunto, estas herramientas ayudan a explorar regiones con firmas espectrales similares.")
+    st.info("Las figuras corresponden al análisis mostrado para W1 con k = 5. La primera ubica las etiquetas de grupo sobre posiciones espaciales; la segunda resume las curvas de cada grupo. Son resultados exploratorios del material proporcionado.")
+    st.markdown("### Mapa de grupos en W1")
+    map_path = ROOT / "Entregables" / "figuras" / "agrupamiento" / "grupos_espectrales_w1.png"
+    profile_path = ROOT / "Entregables" / "figuras" / "agrupamiento" / "perfiles_por_grupo_w1.png"
+    if map_path.exists():
+        st.image(str(map_path), caption="Asignación espacial de grupos espectrales para W1 (k = 5). Las cruces y etiquetas marcan posiciones de referencia; los ejes muestran desplazamientos relativos en el plano del cielo.", width="stretch")
+    else:
+        st.warning("No se encontró la figura del mapa de agrupamiento en el paquete de despliegue.")
+    st.markdown("### Perfil representativo y dispersión dentro de cada grupo")
+    if profile_path.exists():
+        st.image(str(profile_path), caption="Para cada grupo: perfil medio (línea) y percentiles 16–84 (banda sombreada), sobre la frecuencia LSRK de W1.", width="stretch")
+    else:
+        st.warning("No se encontró la figura de perfiles por grupo en el paquete de despliegue.")
+    st.markdown("### Cómo leer el resultado")
+    st.write("Si varias posiciones comparten etiqueta y sus perfiles medios muestran estructuras parecidas, los datos respaldan similitud de la firma espectral en esas regiones, bajo el preprocesamiento y la métrica usados. Las bandas de percentiles muestran la variación de los perfiles dentro de cada grupo; una banda más ancha indica mayor dispersión.")
+    st.warning("Similitud espectral no demuestra por sí sola una composición química idéntica ni identifica moléculas. Para reproducir o evaluar el agrupamiento hacen falta el método y sus parámetros (normalización, canales incluidos, tratamiento de ruido, algoritmo, métrica y selección de k), que estas imágenes por sí solas no documentan. Las etiquetas 0–4 son categorías arbitrarias, no una escala de abundancia.")
 
 elif page == "Evidencia molecular":
     st.subheader("Frecuencia de catálogo y centro del ajuste")
@@ -639,7 +659,19 @@ elif page == "Método paso a paso":
     st.markdown("### ¿Por qué importan los coeficientes de Einstein?")
     st.write("El coeficiente Aᵤₗ (s⁻¹) describe la probabilidad de emisión espontánea por unidad de tiempo para una transición entre niveles u y l. Junto a la degeneración estadística, energía del nivel superior, temperatura y función de partición, ayuda a predecir intensidades relativas en equilibrio local (LTE) y a modelar transferencia radiativa fuera de LTE. Por sí solo no identifica una línea: hacen falta parámetros consistentes y un modelo de la emisión.")
     st.warning("El catálogo local no entrega Aᵤₗ para estas filas. La columna log10_I_300K_nm2_MHz representa intensidad de catálogo bajo condiciones definidas; no es log10(Aᵤₗ). No rellenamos Aᵤₗ con valores inventados.")
-
+    
+elif page == "Agrupamiento de espectros":
+    st.subheader("Agrupamiento de espectros por k-means")
+    st.write(
+    )
+    spectra = load_all_spectra()
+    if spectra.empty:
+        st.error("No se pudieron cargar los espectros para el agrupamiento.")
+    else:
+        distance_matrix = compute_distance_matrix(spectra)
+        fig_dendro = create_dendrogram(distance_matrix, labels=list(POSITIONS.keys()))
+        st.plotly_chart(plot_layout(fig_dendro, 600), width="stretch")
+        st.caption("Dendrograma de agrupamiento jerárquico basado en la similitud espectral. Las ramas más cortas indican mayor similitud entre extracciones.")
 
 else:
     st.subheader("Glosario, datos y procedencia")
@@ -670,3 +702,4 @@ else:
 
 st.divider()
 st.caption("Skyntists · AstroHack SATEM 2026 · Análisis exploratorio. La compatibilidad espectral descrita aquí es tentativa y depende de los datos, catálogos y supuestos documentados.")
+
