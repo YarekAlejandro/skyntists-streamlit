@@ -360,8 +360,8 @@ elif page == "Demostración Doppler":
         grade_short = {
             "Compatibilidad tentativa": "Tentativa",
             "Sugestiva, ambigua": "Ambigua",
-            "Indicio débil; insuficiente para asignar": "Indicio débil",
-            "Sin evidencia suficiente en esta prueba": "Insuficiente",
+            "Indicio débil; insuficiente para asignar": "Débil",
+            "Sin evidencia suficiente en esta prueba": "Insuf.",
         }.get(grade, "No evaluable")
         metrics[0].metric("Ruido σ", f"{demo_sigma:.4f}" if np.isfinite(demo_sigma) else "—", help="Estimación aproximada en Jy/beam a partir de diferencias entre canales.")
         metrics[1].metric("Picos", f"{len(peaks)}", help=f"Máximos con prominencia ≥ {demo_threshold:g}σ local.")
