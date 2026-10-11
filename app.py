@@ -24,29 +24,32 @@ POSITIONS = {
     "A": ("A_Jy_beam", "A · extracción alternativa"),
 }
 
-st.set_page_config(page_title="Skyntists | AstroHack", page_icon="🔭", layout="wide")
+st.set_page_config(page_title="Skyntists | AstroHack", layout="wide")
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
-.stApp {background: radial-gradient(ellipse at 12% 0%, rgba(20,104,130,.15), transparent 32%), #071522;}
-.block-container {max-width: 1500px; padding-top: 1.6rem; padding-bottom: 4rem;}
-html, body, [class*="css"] {font-family:'DM Sans',sans-serif;}
-h1,h2,h3 {font-family:'Space Grotesk',sans-serif; letter-spacing:-.035em;}
-.hero {padding:2rem 2.2rem; border:1px solid rgba(133,222,224,.23); border-radius:22px; background:linear-gradient(118deg,rgba(10,39,61,.98),rgba(13,105,119,.88) 66%,rgba(45,99,117,.78)); box-shadow:0 20px 50px rgba(0,0,0,.22); margin:0 0 1.4rem 0;}
-.hero-kicker {font-size:.78rem; font-weight:700; text-transform:uppercase; letter-spacing:.16em; color:#9de5df;}
-.hero h1 {color:#fff; font-size:clamp(2.2rem,5vw,4rem); margin:.35rem 0 .55rem;}
-.hero p {color:#d3e8ed; font-size:1.12rem; max-width:900px; margin:0;}
-.callout {padding:1rem 1.2rem; border:1px solid rgba(116,206,203,.24); border-left:4px solid #55d6c2; background:rgba(18,49,66,.75); border-radius:12px; margin:.8rem 0 1.15rem;}
-.small-label {color:#9bb4c0; font-size:.82rem; text-transform:uppercase; letter-spacing:.1em;}
-.card {border:1px solid rgba(137,180,195,.18); background:linear-gradient(145deg,rgba(18,41,57,.94),rgba(10,27,41,.9)); border-radius:16px; padding:1.05rem 1.2rem; min-height:128px;}
-.card b {color:#f0f7fa; font-size:1.07rem;}
-.card p {color:#b6c8d2; margin:.42rem 0 0; font-size:.94rem;}
-.muted {color:#b3c6d1;}
-div[data-testid="stMetric"] {background:rgba(17,43,59,.75);border:1px solid rgba(130,181,193,.18);padding:1rem 1.1rem;border-radius:15px;}
-div[data-testid="stMetricLabel"] {color:#b6c8d2;}
-div[data-testid="stMetricValue"] {font-family:'Space Grotesk',sans-serif;}
-section[data-testid="stSidebar"] {background:#091a28;}
+.stApp {background:#f3f5f7; color:#1c2c3a;}
+.block-container {max-width:1440px; padding-top:1.4rem; padding-bottom:3.5rem;}
+html, body, [class*="css"] {font-family:Inter, "Segoe UI", Arial, sans-serif; color:#1c2c3a;}
+h1,h2,h3 {font-family:Inter, "Segoe UI", Arial, sans-serif; color:#17324d; letter-spacing:-.025em;}
+h2, h3 {font-weight:650;}
+.hero {padding:1.65rem 1.9rem; border:1px solid #d9e1e8; border-left:5px solid #176b87; border-radius:8px; background:#fff; box-shadow:0 3px 14px rgba(20,43,62,.045); margin:0 0 1.15rem;}
+.hero-kicker {font-size:.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.13em; color:#176b87;}
+.hero h1 {color:#17324d; font-size:clamp(2rem,4vw,3.35rem); margin:.3rem 0 .45rem;}
+.hero p {color:#526474; font-size:1.04rem; max-width:940px; margin:0; line-height:1.65;}
+.callout {padding:.9rem 1.1rem; border:1px solid #d7e3e9; border-left:4px solid #176b87; background:#fff; border-radius:5px; margin:.75rem 0 1.1rem; color:#33495b; line-height:1.6;}
+.small-label {color:#607487; font-size:.75rem; text-transform:uppercase; letter-spacing:.09em; font-weight:700;}
+.card {border:1px solid #dce3e9; background:#fff; border-radius:7px; padding:1rem 1.1rem; min-height:128px; box-shadow:0 2px 8px rgba(20,43,62,.035);}
+.card b {color:#17324d; font-size:1.04rem;}
+.card p {color:#526474; margin:.42rem 0 0; font-size:.92rem; line-height:1.55;}
+.muted {color:#607487;}
+div[data-testid="stMetric"] {background:#fff; border:1px solid #dce3e9; padding:.9rem 1rem; border-radius:7px; box-shadow:0 2px 8px rgba(20,43,62,.035);}
+div[data-testid="stMetricLabel"] {color:#607487;}
+div[data-testid="stMetricValue"] {font-family:Inter, "Segoe UI", Arial, sans-serif; color:#17324d; font-weight:650;}
+section[data-testid="stSidebar"] {background:#e9eef2; border-right:1px solid #d8e0e6;}
+section[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p {color:#3e5263;}
 button[data-baseweb="tab"] {font-weight:600;}
+div[data-testid="stDataFrame"] {border:1px solid #dce3e9; border-radius:6px; overflow:hidden;}
+.stDownloadButton button {border-radius:5px; font-weight:600;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -81,13 +84,13 @@ def load_evidence() -> pd.DataFrame:
 
 def plot_layout(fig: go.Figure, height: int = 470) -> go.Figure:
     fig.update_layout(
-        height=height, template="plotly_dark", paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(7,21,34,.72)", font=dict(family="DM Sans", color="#d7e4ea"),
-        margin=dict(l=22, r=24, t=62, b=28), legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0),
-        hoverlabel=dict(bgcolor="#102a3b", bordercolor="#5bd4c4", font_color="#f3fbff"),
+        height=height, template="plotly_white", paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="#ffffff", font=dict(family="Inter, Segoe UI, Arial, sans-serif", color="#263b4d", size=12),
+        margin=dict(l=28, r=26, t=64, b=34), legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0),
+        hoverlabel=dict(bgcolor="#ffffff", bordercolor="#176b87", font_color="#1c2c3a"),
     )
-    fig.update_xaxes(gridcolor="rgba(155,190,202,.12)", zerolinecolor="rgba(155,190,202,.24)")
-    fig.update_yaxes(gridcolor="rgba(155,190,202,.12)", zerolinecolor="rgba(155,190,202,.24)")
+    fig.update_xaxes(gridcolor="#e7edf1", zerolinecolor="#aab8c3", linecolor="#b8c4cd", ticks="outside")
+    fig.update_yaxes(gridcolor="#e7edf1", zerolinecolor="#aab8c3", linecolor="#b8c4cd", ticks="outside")
     return fig
 
 
@@ -100,7 +103,7 @@ except Exception as exc:
 st.markdown("""
 <div class="hero">
  <div class="hero-kicker">Guía interactiva · AstroHack SATEM 2026</div>
- <h1>🔭 Skyntists</h1>
+ <h1>Skyntists</h1>
  <p>Un recorrido reproducible por los espectros de IRAS 16293−2422: del dato calibrado a una hipótesis molecular, haciendo visibles la evidencia, las decisiones y sus límites.</p>
 </div>
 """, unsafe_allow_html=True)
@@ -145,7 +148,7 @@ if page == "Inicio":
     species_summary["mediana_SNR"] = species_summary["mediana_SNR"].round(1)
     a, b = st.columns([1.15, 1])
     with a:
-        fig = px.bar(species_summary, x="especie", y="perfiles", color="especie", text="perfiles", title="Perfiles evaluados por especie", color_discrete_sequence=["#55d6c2", "#6da8ff", "#ffc66d"])
+        fig = px.bar(species_summary, x="especie", y="perfiles", color="especie", text="perfiles", title="Perfiles evaluados por especie", color_discrete_sequence=["#176b87", "#7656a5", "#bd6b2d"])
         fig.update_traces(textposition="outside", marker_line_width=0)
         fig.update_layout(showlegend=False, xaxis_title=None, yaxis_title="Número de perfiles")
         st.plotly_chart(plot_layout(fig, 365), width="stretch")
@@ -177,7 +180,7 @@ elif page == "Espectros":
     else:
         candidate = None
     fig = go.Figure()
-    palette = {"B_offset": "#60d7c5", "B_pico": "#76a9fa", "A": "#ffbd69"}
+    palette = {"B_offset": "#087f8c", "B_pico": "#3568a8", "A": "#bd6b2d"}
     for key in series:
         value_col, label = POSITIONS[key]
         fig.add_trace(go.Scatter(x=df[freq_key], y=df[value_col], mode="lines", name=label, line=dict(color=palette[key], width=1.35 if len(series)>1 else 1.8), hovertemplate="ν = %{x:.6f} GHz<br>I = %{y:.4f} Jy/beam<extra>%{fullData.name}</extra>"))
@@ -187,8 +190,8 @@ elif page == "Espectros":
         intensity_col = POSITIONS[position][0]
         nearest_i = (df[freq_key] - fit_ghz).abs().idxmin()
         fit_intensity = float(df.loc[nearest_i, intensity_col])
-        fig.add_trace(go.Scatter(x=[fit_ghz], y=[fit_intensity], mode="markers", name="Centro ajustado", marker=dict(size=12, color="#fff1a8", line=dict(width=2, color="#102332")), hovertemplate="Centro ajustado<br>ν = %{x:.6f} GHz<extra></extra>"))
-        fig.add_vline(x=rest_shifted_ghz, line_dash="dot", line_color="#f2a7ff", line_width=1.7, annotation_text="Catálogo @ 2.7 km/s", annotation_position="top left", annotation_font_color="#f2a7ff")
+        fig.add_trace(go.Scatter(x=[fit_ghz], y=[fit_intensity], mode="markers", name="Centro ajustado", marker=dict(size=11, color="#d49300", line=dict(width=2, color="#ffffff")), hovertemplate="Centro ajustado<br>ν = %{x:.6f} GHz<extra></extra>"))
+        fig.add_vline(x=rest_shifted_ghz, line_dash="dot", line_color="#7656a5", line_width=1.7, annotation_text="Catálogo @ 2.7 km/s", annotation_position="top left", annotation_font_color="#684894")
         if view_mode == "Región de línea":
             fwhm = candidate["FWHM_kms"]
             fwhm = 1.0 if pd.isna(fwhm) else float(fwhm)
@@ -212,7 +215,7 @@ elif page == "Evidencia molecular":
     view = evidence[evidence["especie"].isin(chosen) & evidence["ventana"].isin(chosen_windows)].copy()
     if not view.empty:
         fig = px.strip(view, x="especie", y="residuo_MHz_vs_vsys", color="especie", hover_name="grupo_rasgo", hover_data={"frecuencia_reposo_MHz": ":.4f", "frecuencia_pico_LSRK_MHz": ":.4f", "v_frecuencia_kms": ":.3f", "ventana": True, "residuo_MHz_vs_vsys": ":+.4f"}, stripmode="overlay", title="Desplazamiento del centro ajustado frente a la predicción cinemática")
-        fig.add_hline(y=0, line_dash="dash", line_color="#f4f7fa", opacity=.85, annotation_text="Coincidencia con v = 2.7 km/s", annotation_position="top left")
+        fig.add_hline(y=0, line_dash="dash", line_color="#65798a", opacity=.9, annotation_text="Coincidencia con v = 2.7 km/s", annotation_position="top left")
         fig.update_traces(jitter=0.22, pointpos=0, marker=dict(size=13, line=dict(width=1, color="#071522")))
         fig.update_layout(xaxis_title="Especie candidata", yaxis_title="ν ajuste − ν catálogo corregida (MHz)", showlegend=False)
         st.plotly_chart(plot_layout(fig, 500), width="stretch")
@@ -222,7 +225,7 @@ elif page == "Evidencia molecular":
             plotted = view.dropna(subset=["v_frecuencia_kms", "SNR", "FWHM_kms"])
             if not plotted.empty:
                 figv = px.scatter(plotted, x="v_frecuencia_kms", y="SNR", color="especie", symbol="ventana", size="FWHM_kms", hover_name="grupo_rasgo", hover_data={"frecuencia_reposo_MHz": ":.3f", "frecuencia_pico_LSRK_MHz": ":.3f", "FWHM_kms": ":.2f", "mezcla": True}, title="Contraste local y cinemática de los perfiles")
-                figv.add_vline(x=V_SYSTEM_KMS, line_dash="dash", line_color="#f5d26c", annotation_text="v sistémica adoptada")
+                figv.add_vline(x=V_SYSTEM_KMS, line_dash="dash", line_color="#bd6b2d", annotation_text="v sistémica adoptada")
                 figv.update_layout(xaxis_title="Velocidad radial derivada (km/s)", yaxis_title="SNR local aproximado")
                 st.plotly_chart(plot_layout(figv, 430), width="stretch")
                 if len(plotted) < len(view):
